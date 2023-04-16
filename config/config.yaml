@@ -1,0 +1,28 @@
+ASR:
+  slug: openai_asr
+  baidu_asr:
+    app_id: '31599074'
+    api_key: 'fFUb8KkPU8Ev5mHpVZ8fD7Lr'
+    secret_key: 'n0L1tS9nOk3hXUcooOBryei0GBqCdF3f'
+
+  openai_asr:
+    root_dir: '/home/ubuntu/Projects/jarvis/tools/jvs_prog/asset'
+
+
+DETECTOR:
+  save_dir: '/tmp'
+  modelf: ['/home/ubuntu/Projects/jarvis/tools/jvs_prog/asset/snowboy.umdl']
+  sensitivity: [0.5]
+  gain: 1
+  apply_frontend: False
+  chunk: 1024
+  rate: 16000
+  channels: 1
+  silence_time: 4
+  silence_threshold: 1500
+
+CHAT:
+  slug: 'gpt'
+  gpt:
+    openai_key: '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'
+    proxy: {'http_proxy': 'http://127.0.0.1:12333', 'https_proxy': 'http://127.0.0.1:12333'}

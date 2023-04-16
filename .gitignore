@@ -1,0 +1,5 @@
+.vscode
+*.wav
+*.pt
+*.umdl
+*/__pycache__
