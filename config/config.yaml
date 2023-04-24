@@ -18,11 +18,12 @@ DETECTOR:
   chunk: 1024
   rate: 16000
   channels: 1
-  silence_time: 4
+  silence_time: 1
   silence_threshold: 1500
 
 CHAT:
   slug: 'gpt'
   gpt:
-    openai_key: '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'
-    proxy: {'http_proxy': 'http://127.0.0.1:12333', 'https_proxy': 'http://127.0.0.1:12333'}
+    openai_key: ${OPENAI_KEY}
+    # proxy: {'http_proxy': 'http://127.0.0.1:12333', 'https_proxy': 'http://127.0.0.1:12333'}
+    proxy: {}

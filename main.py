@@ -35,7 +35,8 @@ def read_config(config_file):
     '''
     with open(config_file, 'r') as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
-    return EasyDict(config) 
+    config = EasyDict(config)
+    return config
 
 class JVSRobot:
     def __init__(self, config):

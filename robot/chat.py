@@ -6,13 +6,16 @@ LastEditTime: 2023-04-12 22:54:16
 FilePath: /jvs_prog/robot/chat.py
 Description: 
 '''
+import os
 import time
 import openai
+import logging
 from abc import ABCMeta, abstractmethod
-from robot import config, logger, constants
+from robot import config
+from robot.logger import getLogger
 
 MODULE = 'CHAT'
-logger = logger.getLogger(__name__)
+logger = getLogger(__name__, level=logging.DEBUG)
 
 class ChatRobotBase(object):
     '''Abstract class for ChatRobot
@@ -43,8 +46,9 @@ class GPTRobot(ChatRobotBase):
 
     def __init__(self, openai_key: str, proxy: dict):
         self.openai = openai
-        self.openai.api_key = openai_key
+        self.openai.api_key = os.environ.get('OPENAI_KEY')
         self.proxy = proxy
+        logger.debug('GPT openai key: %s', self.openai.api_key)
 
     @classmethod
     def get_config(cls):
@@ -52,12 +56,17 @@ class GPTRobot(ChatRobotBase):
 
     def stream_chat(self, texts):
         rsp = self.openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[
+            model="gpt-3.5-turbo",
+            messages=[
                 {"role": "user", "content": texts}
             ]
         )
-        return rsp['choices'][0]['message']['content']
+
+        try:
+            return rsp['choices'][0]['message']['content']
+        except Exception as e:
+            logger.error('GPT chat error: %s', e)
+            return None
 
 def get_subclass(cls):
     '''Get all subclasses of a class
@@ -76,6 +85,3 @@ def get_robot_by_slug(slug):
             return robot_cls.get_instance()
     return None
 
-if __name__ == '__main__':
-    robot = get_robot_by_slug('gpt')
-    robot.stream_chat('帮我打开灯')

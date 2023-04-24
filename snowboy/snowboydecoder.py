@@ -320,7 +320,7 @@ class HotwordDetector(object):
             channels=self.detector.NumChannels(),
             rate=self.detector.SampleRate(),
             frames_per_buffer=self._config.chunk,
-            # stream_callback=audio_callback,
+            stream_callback=audio_callback,
         )
 
         if interrupt_check():
@@ -329,13 +329,16 @@ class HotwordDetector(object):
 
         tc = type(detected_callback)
         if tc is not list:
-            detected_callback = [detected_callback]
-        if len(detected_callback) == 1 and self.num_hotwords > 1:
-            detected_callback *= self.num_hotwords
+            detected_callbacks = [detected_callback]
+        else:
+            detected_callbacks = detected_callback
+        
+        if len(detected_callbacks) == 1 and self.num_hotwords > 1:
+            detected_callbacks *= self.num_hotwords
 
-        assert self.num_hotwords == len(detected_callback), (
+        assert self.num_hotwords == len(detected_callbacks), (
             "Error: hotwords in your models (%d) do not match the number of "
-            "callbacks (%d)" % (self.num_hotwords, len(detected_callback))
+            "callbacks (%d)" % (self.num_hotwords, len(detected_callbacks))
         )
 
         logger.debug("detecting...")
@@ -347,8 +350,8 @@ class HotwordDetector(object):
                 logger.debug("detect voice break")
                 break
 
-            # data = self.ring_buffer.get()
-            data = self.stream_in.read(self._config.chunk)
+            data = self.ring_buffer.get()
+            # data = self.stream_in.read(self._config.chunk)
             if len(data) == 0:
                 time.sleep(sleep_time)
                 continue
@@ -366,7 +369,7 @@ class HotwordDetector(object):
                         "%Y-%m-%d %H:%M:%S", time.localtime(time.time())
                     )
                     logger.debug(message)
-                    callback = detected_callback[status - 1]
+                    callback = detected_callbacks[status - 1]
                     callback and callback()
 
                     if audio_recorder_callback and status != 0:
@@ -376,8 +379,9 @@ class HotwordDetector(object):
                         voice_detect = 0
                     continue
             elif state == "ACTIVE":
-                nums = struct.unpack('h' * self._config.chunk, data)
-                rms = math.sqrt(sum([(n**2) for n in nums]) / self._config.chunk)
+                chunk = len(data)//2
+                nums = struct.unpack('h' * chunk, data)
+                rms = math.sqrt(sum([(n**2) for n in nums]) / chunk)
 
                 stop_recording = False
                 if voice_detect == 0:
@@ -386,6 +390,7 @@ class HotwordDetector(object):
                             str(time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(time.time())))
                         )
                         voice_detect = 1
+                        self.recorded_data.append(data)
                 elif voice_detect == 1:
                     self.recorded_data.append(data)
                     if rms < self._config.silence_threshold:
@@ -401,6 +406,7 @@ class HotwordDetector(object):
                     fname = self.saveMessage(self.recorded_data, self._config.save_dir)
                     audio_recorder_callback(fname)
                     state = "PASSIVE"
+                    voice_detect = 0
                     continue
 
         logger.debug("finished.")
